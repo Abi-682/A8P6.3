@@ -1,69 +1,67 @@
 # Exercise 3 Report: Motor Current Anomaly Detection
+## Overview
+This exercise compares an LSTM, a 1D CNN, and a transformer encoder on a synthetic motor current anomaly detection task. The dataset contains 1200 waveforms (128 time steps each) in three classes: healthy, bearing wear, and winding fault.
 
-## Problem Overview
+## Dataset
+The synthetic dataset is generated with small load variation, high-frequency ripple for bearing wear, and slight positive-peak asymmetry for winding fault. A saved dataset file `motor_current_data.npz` is produced by the script.
 
-This report compares three sequence architectures—LSTM, 1D CNN, and Transformer Encoder—for detecting anomalies in motor current waveforms. The dataset consists of 1200 synthetic waveforms (400 per class) representing healthy operation, bearing wear, and winding faults.
-
-## Data Visualization
-
-The following plot shows one waveform from each class. As expected, the anomalies are subtle and not visually distinguishable by eye.
-
+## Visualizations
 ![Waveform Visualization](waveform_visualization.png)
 
-## Model Architectures and Training
+## Test Results
+| Model | Test Accuracy |
+|---|---:|
+| LSTM | 0.311 |
+| 1D CNN | 0.811 |
+| Transformer | 0.822 |
 
-### LSTM Model
-- Architecture: LSTM layer (hidden size 32) followed by FC output layer
-- Uses final hidden state for classification
-- Trained for 80 epochs with Adam optimizer and cross-entropy loss
+## Per-Class Performance
+The classification reports below show model performance on healthy, bearing wear, and winding fault examples.
 
-### 1D CNN Model
-- Architecture: Three Conv1d layers (16, 32, 64 filters, kernel size 5) with ReLU, global average pooling, and FC output
-- Trained with same settings as LSTM
+### LSTM
 
-### Transformer Encoder Model
-- Architecture: Input projection to 32D, learned positional encoding, 2-layer transformer encoder (4 heads, FF dim 64), mean pooling, FC output
-- Trained with same settings
+```               precision    recall  f1-score   support
 
-All models used a 70/15/15 train/validation/test split.
+      healthy       0.29      0.76      0.42        51
+ bearing_wear       1.00      0.01      0.03        68
+winding_fault       0.36      0.26      0.30        61
 
-## Results Comparison
+     accuracy                           0.31       180
+    macro avg       0.55      0.35      0.25       180
+ weighted avg       0.58      0.31      0.23       180
 
-### Overall Test Accuracy
+```
+### 1D CNN
 
-| Model       | Test Accuracy |
-|-------------|---------------|
-| LSTM       | [See results.txt] |
-| 1D CNN     | [See results.txt] |
-| Transformer| [See results.txt] |
+```               precision    recall  f1-score   support
 
-### Per-Class Accuracy
+      healthy       0.60      1.00      0.75        51
+ bearing_wear       1.00      0.51      0.68        68
+winding_fault       1.00      0.98      0.99        61
 
-[Include classification reports from results.txt]
+     accuracy                           0.81       180
+    macro avg       0.87      0.83      0.81       180
+ weighted avg       0.89      0.81      0.81       180
 
-## Analysis
+```
+### Transformer
 
-### Architectural Tradeoffs
+```               precision    recall  f1-score   support
 
-- **LSTM**: Processes sequences sequentially, good for capturing temporal dependencies but may struggle with long-range patterns.
-- **1D CNN**: Detects local patterns through convolution, efficient for spatial features in time series.
-- **Transformer**: Uses self-attention for parallel processing and long-range dependencies, potentially better for subtle global anomalies.
+      healthy       0.66      0.76      0.71        51
+ bearing_wear       0.80      0.71      0.75        68
+winding_fault       1.00      1.00      1.00        61
 
-The transformer likely performs best due to its ability to attend to all positions simultaneously, which is crucial for detecting the subtle anomalies that affect the entire waveform.
+     accuracy                           0.82       180
+    macro avg       0.82      0.82      0.82       180
+ weighted avg       0.83      0.82      0.82       180
 
+```
 ## Attention Visualization
+The transformer attention heatmaps are saved as `attention_bearing_wear.png` and `attention_winding_fault.png`.
 
-The self-attention weights from the first encoder layer show how the transformer focuses on different parts of the sequence.
-
-### Bearing Wear Example
 ![Attention Bearing Wear](attention_bearing_wear.png)
-
-### Winding Fault Example
 ![Attention Winding Fault](attention_winding_fault.png)
 
-The attention patterns reveal that the transformer learns different focusing mechanisms for different fault types, attending to high-frequency regions for bearing wear and asymmetric peaks for winding faults.
-
-## Conclusion
-
-The transformer encoder demonstrates superior performance in detecting subtle motor current anomalies compared to LSTM and 1D CNN, highlighting the advantages of attention-based architectures for complex sequence analysis tasks.</content>
-<parameter name="filePath">c:\Soft\MI\A8P6.3\exercise_3_report.md
+## Discussion
+The transformer performs best because self-attention compares all time steps in parallel and can detect both the high-frequency bearing ripple and the global winding asymmetry. The 1D CNN captures local time-domain patterns, while the LSTM struggles with subtle spectral detail because it must accumulate information sequentially.
